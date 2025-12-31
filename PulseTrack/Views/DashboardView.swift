@@ -8,9 +8,8 @@
 import SwiftUI
 
 //MARK: Responsible for only Displaying UI & forwarding User Actions
+
 struct DashboardView: View {
-    //MARK: - State
-    
     /// @StateObject  ensures that the viewModel is created Once.
     @StateObject private var viewModel: DashboardViewModel = DashboardViewModel()
     
@@ -22,13 +21,29 @@ struct DashboardView: View {
                 ProgressView()
             }
             
-            ///Metric Display
-            ForEach(viewModel.metrics, id:\.id){ metric in
-                Text(metric.name)
-                    .font(.headline)
-                
-                Text(metric.value)
-                    .font(.largeTitle)
+            ///Error State
+            if let error = viewModel.error{
+                VStack(spacing:8){
+                    Text(error.localizedDescription)
+                        .foregroundStyle(.red)
+                        .multilineTextAlignment(.center)
+                    
+                    Button("Retry"){
+                        viewModel.loadMetric()
+                    }
+                }
+            }
+            
+            /// Sucess State
+            if viewModel.error == nil{
+                ///Metric Display
+                ForEach(viewModel.metrics, id:\.id){ metric in
+                    Text(metric.name)
+                        .font(.headline)
+                    
+                    Text(metric.value)
+                        .font(.largeTitle)
+                }
             }
             
             

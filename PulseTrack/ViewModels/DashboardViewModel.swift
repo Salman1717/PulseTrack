@@ -9,7 +9,12 @@ import Foundation
 import Combine
 
 //MARK: Dashboard ViewModel
-// Handles Business logic and async operations
+
+// Handles:
+/// - Business logic
+/// - Async operations
+/// - Error States
+
 // Annoted with @MainActor to ensure UI state updates happen on main thread
 
 @MainActor
@@ -22,6 +27,9 @@ final class DashboardViewModel: ObservableObject{
     
     ///Controls Loading State in the UI
     @Published var isLoading: Bool = false
+    
+    /// Error
+    @Published var error: AppError?
     
     //MARK: - Dependencies
     
@@ -61,11 +69,17 @@ final class DashboardViewModel: ObservableObject{
             //exit early if task was cancelled
             guard !Task.isCancelled else { return }
             
-            /// Fetch Metrics  concurrently
-            async let heartRate = heartRateService.fetchMetric()
-            async let steps = stepsService.fetchMetric()
             
-            self.metrics = (try? await [heartRate, steps]) ?? []
+            do{
+                /// Fetch Metrics  concurrently
+                async let heartRate = heartRateService.fetchMetric()
+                async let steps = stepsService.fetchMetric()
+                
+                self.metrics = (try? await [heartRate, steps]) ?? []
+            }catch{
+                self.metrics = []
+                self.error = .failedToLoad
+            }
             
         }
     }
