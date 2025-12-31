@@ -14,6 +14,7 @@ import Combine
 /// - Business logic
 /// - Async operations
 /// - Error States
+/// - Delegate data saftey to  an actor
 
 // Annoted with @MainActor to ensure UI state updates happen on main thread
 
@@ -41,6 +42,11 @@ final class DashboardViewModel: ObservableObject{
     ///Service Injected to fetch metric data
     private lazy var heartRateService: MetricServiceProtocol = HeartRateService()
     private lazy var stepsService: MetricServiceProtocol = StepsService()
+    
+    //MARK: - Actor
+    
+    /// Actor responsible for safely storing metrics
+    private let metricStore = MetricStore()
     
     // MARK: - Task Management
     ///We keep a reference to the async Task so I can explicitly cancel it when it’s no longer needed
@@ -75,8 +81,16 @@ final class DashboardViewModel: ObservableObject{
                 async let heartRate = heartRateService.fetchMetric()
                 async let steps = stepsService.fetchMetric()
                 
-                self.metrics = (try? await [heartRate, steps]) ?? []
+                let fetchedMetrics = try await [heartRate, steps]
+                
+                /// Actor  handles shared state safely
+                await metricStore.set(fetchedMetrics)
+                
+                ///UI  Reads actor-protected data
+                self.metrics = await metricStore.get()
+                
             }catch{
+                await metricStore.clear()
                 self.metrics = []
                 self.error = .failedToLoad
             }
