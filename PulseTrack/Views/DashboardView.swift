@@ -42,6 +42,10 @@ struct DashboardView: View {
             ///Load Data when the view Appears
             viewModel.loadMetric()
         }
+        .onDisappear(){
+            /// Cancel background Tasks when no longer needed
+            viewModel.cancelLoading()
+        }
     }
 }
 

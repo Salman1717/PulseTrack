@@ -34,20 +34,32 @@ final class DashboardViewModel: ObservableObject{
     private lazy var heartRateService: MetricServiceProtocol = HeartRateService()
     private lazy var stepsService: MetricServiceProtocol = StepsService()
     
+    // MARK: - Task Management
+    ///We keep a reference to the async Task so I can explicitly cancel it when it’s no longer needed
+    
+    ///Refrence to the current async task
+    private var loadTask: Task<Void, Never>?
+    
     
     //MARK: - Public API
     
     ///Loads Metrics Data Asynchronously
-    
     func loadMetric() {
+        
+        ///Cancel any existing task before starting a new one
+        loadTask?.cancel()
+        
         isLoading = true
         ///Task is used to perform async work from a non-async context
-        Task { [weak self] in
+        loadTask = Task { [weak self] in
             
             guard let self else { return }
             
             ///Use 'defer' to ensure loading state  is always toggled off even if the task is cancelled or fails.
             defer {self.isLoading = false}
+            
+            //exit early if task was cancelled
+            guard !Task.isCancelled else { return }
             
             /// Fetch Metrics  concurrently
             async let heartRate = heartRateService.fetchMetric()
@@ -56,6 +68,13 @@ final class DashboardViewModel: ObservableObject{
             self.metrics = (try? await [heartRate, steps]) ?? []
             
         }
+    }
+    
+    //Cancel loading
+    func cancelLoading(){
+        loadTask?.cancel()
+        loadTask = nil
+        isLoading = false
     }
     
 }
