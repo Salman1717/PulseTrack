@@ -23,14 +23,14 @@ struct DashboardView: View {
             }
             
             ///Metric Display
-            if let metric = viewModel.metric{
-                
+            ForEach(viewModel.metrics, id:\.id){ metric in
                 Text(metric.name)
                     .font(.headline)
                 
                 Text(metric.value)
                     .font(.largeTitle)
             }
+            
             
             ///Refresh Button
             Button("Refresh"){

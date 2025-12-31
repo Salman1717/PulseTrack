@@ -17,22 +17,24 @@ final class DashboardViewModel: ObservableObject{
     
     //MARK: -  Published States
     
-    ///Currently Displayed metric
-    @Published private(set) var metric: Metric?
+    ///List of  Metrics  Displayed on dashboard
+    @Published private(set) var metrics: [Metric] = []
     
     ///Controls Loading State in the UI
     @Published var isLoading: Bool = false
     
     //MARK: - Dependencies
     
+    ///Avoid unsafe assumptions and instead ensure dependencies are initialized within the actor context using lazy properties or initializer bodies
+    ///as our viewModel  runs on  @MainActor
+    ///Lazy initialization ensures dependencies are created inside the actor context only when needed, which avoids isolation warnings and improves startup performance
+    ///Use lazy dependency initialization to ensure actor-safe construction without sacrificing testability or architecture.
+    
     ///Service Injected to fetch metric data
-    private let service: MetricServiceProtocol
+    private lazy var heartRateService: MetricServiceProtocol = HeartRateService()
+    private lazy var stepsService: MetricServiceProtocol = StepsService()
     
-    //MARK: - Initializer
     
-    init(service: MetricServiceProtocol = HeartRateService()) {
-        self.service = service
-    }
     //MARK: - Public API
     
     ///Loads Metrics Data Asynchronously
@@ -47,7 +49,11 @@ final class DashboardViewModel: ObservableObject{
             ///Use 'defer' to ensure loading state  is always toggled off even if the task is cancelled or fails.
             defer {self.isLoading = false}
             
-            self.metric = try? await service.fetchMetric()
+            /// Fetch Metrics  concurrently
+            async let heartRate = heartRateService.fetchMetric()
+            async let steps = stepsService.fetchMetric()
+            
+            self.metrics = (try? await [heartRate, steps]) ?? []
             
         }
     }
