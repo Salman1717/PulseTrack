@@ -60,6 +60,9 @@ final class DashboardViewModel: ObservableObject{
     ///Loads Metrics Data Asynchronously
     func loadMetric() {
         
+        /// Prevent Duplicate loads
+        guard !isLoading else { return }
+        
         ///Cancel any existing task before starting a new one
         loadTask?.cancel()
         
