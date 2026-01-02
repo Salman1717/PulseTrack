@@ -39,9 +39,21 @@ final class DashboardViewModel: ObservableObject{
     ///Lazy initialization ensures dependencies are created inside the actor context only when needed, which avoids isolation warnings and improves startup performance
     ///Use lazy dependency initialization to ensure actor-safe construction without sacrificing testability or architecture.
     
-    ///Service Injected to fetch metric data
-    private lazy var heartRateService: MetricServiceProtocol = HeartRateService()
-    private lazy var stepsService: MetricServiceProtocol = StepsService()
+    //    ///Service Injected to fetch metric data
+    //    private lazy var heartRateService: MetricServiceProtocol = HeartRateService()
+    //    private lazy var stepsService: MetricServiceProtocol = StepsService()
+    
+    //MARK: - Initializing Dependencies (Testable)
+    private let heartRateService: MetricServiceProtocol
+    private let stepsService: MetricServiceProtocol
+    
+    init(
+        heartRateService: MetricServiceProtocol = HeartRateService(),
+        stepsService: MetricServiceProtocol = StepsService()
+    ) {
+        self.heartRateService = heartRateService
+        self.stepsService = stepsService
+    }
     
     //MARK: - Actor
     
